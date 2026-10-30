@@ -1,0 +1,41 @@
+{
+  "name": "dock-tv",
+  "productName": "Dock TV",
+  "version": "1.0.0",
+  "description": "Replace your Samsung TV's ad-filled home screen with a clean, customisable dock, and switch off the tracking.",
+  "main": "main.js",
+  "author": "Youssef",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/run.js",
+    "dist": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "io.github.docktv",
+    "productName": "Dock TV",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**",
+      "ui/**",
+      "launcher/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "signAndEditExecutable": false,
+      "artifactName": "DockTV-${version}-portable.exe"
+    }
+  }
+}

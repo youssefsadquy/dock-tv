@@ -1,0 +1,1 @@
+window.SPOTIFY_AUTH = {};

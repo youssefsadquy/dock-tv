@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>Dock</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="wpA" class="wp"></div>
+  <div id="wpB" class="wp"></div>
+  <div class="scrim"></div>
+
+  <header class="hero" id="hero">
+    <div class="time" id="time">--:--</div>
+    <div class="date" id="date"></div>
+  </header>
+
+  <section class="card glass bus" id="bus" style="display:none" aria-live="polite">
+    <div class="bus-head">
+      <span class="bus-line" id="busLine"></span>
+      <span class="bus-stop" id="busStop"></span>
+    </div>
+    <div class="bus-list" id="busList"></div>
+  </section>
+
+  <section class="card glass prayer" id="prayer" style="display:none" aria-live="polite">
+    <div class="pr-head">
+      <span class="pr-count" id="prCount"></span>
+      <span class="pr-place" id="prPlace"></span>
+    </div>
+    <div class="pr-row" id="prRow"></div>
+  </section>
+
+  <aside class="widgets" id="widgets">
+    <section class="card glass weather" id="weather" style="display:none">
+      <div class="wx-now">
+        <div class="wx-icon" id="wxIcon"></div>
+        <div class="wx-temp" id="wxTemp"></div>
+        <div class="wx-desc">
+          <div class="wx-text" id="wxText"></div>
+          <div class="wx-range" id="wxRange"></div>
+        </div>
+      </div>
+      <div class="wx-hours" id="wxHours"></div>
+      <div class="wx-place" id="wxPlace"></div>
+    </section>
+
+    <div class="widget-switch" id="widgetSwitch" style="display:none">
+      <section class="card glass spotify" id="spotify" style="display:none" role="button" aria-live="polite">
+        <div class="sp-row">
+          <div class="sp-art" id="spArt">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <circle cx="24" cy="24" r="21"/>
+              <path d="M13.5 18.5c7.2-1.9 14.8-1.1 21 2.7"/>
+              <path d="M15 25.2c6.2-1.4 12.4-.6 17.6 2.4"/>
+              <path d="M17 31.5c4.9-1 9.6-.4 13.7 1.8"/>
+            </svg>
+          </div>
+          <div class="sp-info">
+            <div class="sp-kicker" id="spKicker">Spotify</div>
+            <div class="sp-title" id="spTitle">Nothing playing</div>
+            <div class="sp-artist" id="spArtist">Open Spotify on your phone</div>
+          </div>
+          <div class="sp-chip" id="spChip"></div>
+        </div>
+        <div class="sp-progress"><div class="sp-bar" id="spBar"></div></div>
+        <div class="sp-hint" id="spHint">OK play/pause</div>
+      </section>
+
+      <section class="card glass net" id="net" style="display:none" role="button" aria-live="polite">
+        <div class="net-row">
+          <svg class="net-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path class="arc a4" d="M4 18.5a28 28 0 0 1 40 0"/>
+            <path class="arc a3" d="M10.5 25a19 19 0 0 1 27 0"/>
+            <path class="arc a2" d="M17 31.5a10 10 0 0 1 14 0"/>
+            <circle class="arc a1" cx="24" cy="38" r="3.2"/>
+            <path class="slash" d="M9 9 L39 41"/>
+          </svg>
+          <div class="net-name" id="netName">Checking network</div>
+          <div class="chip" id="netChip"><span class="dot"></span><span id="netState"></span></div>
+        </div>
+        <div class="net-log" id="netLog"></div>
+        <div class="net-hint">OK shows the connection history</div>
+      </section>
+    </div>
+  </aside>
+
+  <nav class="shelf-wrap" aria-label="Apps and inputs">
+    <div class="shelf" id="shelf" role="menubar"></div>
+  </nav>
+
+  <section class="panel" id="panel" aria-label="Connection history">
+    <div class="sheet glass" id="sheet">
+      <h2>Connection history</h2>
+      <p class="p-watched" id="panelWatched"></p>
+      <div class="panel-cols">
+        <div class="p-list-wrap"><div class="p-list" id="panelList"></div></div>
+        <div class="p-speed">
+          <h3>Speed check</h3>
+          <div class="speed-btn" id="speedBtn">Check speed now</div>
+          <div class="speed-list" id="speedList"></div>
+        </div>
+      </div>
+      <p class="p-hint">OK checks the speed. Up and Down scroll the list. Back closes this.</p>
+    </div>
+  </section>
+
+  <div class="toast glass" id="toast" role="status" aria-live="polite"><span id="toastText"></span></div>
+
+  <div class="dim" id="dim"></div>
+
+  <section class="spotify-player" id="spotifyPlayer">
+    <iframe id="spotifyPlayerFrame" title="Spotify player" allow="encrypted-media; autoplay" src="about:blank"></iframe>
+  </section>
+
+  <script src="$WEBAPIS/webapis/webapis.js"></script>
+  <script src="wallpapers/credits.js"></script>
+  <script src="wallpapers-night/credits-night.js"></script>
+  <script src="js/dock-config.js"></script>
+  <script src="js/spotify-config.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

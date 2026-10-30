@@ -1,0 +1,14 @@
+node_modules/
+release/
+dist/
+*.log
+# Personal data never belongs in the repo (the app keeps it in your user profile, not here)
+data/
+backups/
+settings-log.json
+tv.json
+state.json
+layout.json
+*.wgt
+*.p12
+*.pwd

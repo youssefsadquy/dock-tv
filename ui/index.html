@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; frame-src file:; font-src 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dock TV</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <aside class="side">
+    <div class="brand"><span class="logo"></span><div><b>Dock TV</b><small id="ver"></small></div></div>
+    <nav id="nav"></nav>
+    <div class="side-foot">
+      <p>Your TV details, backups and settings stay on this PC.</p>
+      <button class="link" id="openData">Open data folder</button>
+    </div>
+  </aside>
+  <main id="view" class="view"></main>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>

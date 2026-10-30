@@ -1,0 +1,632 @@
+/* Dock, 2026 look - written for the Tizen 4.0 web engine (2018 Samsung TVs):
+   no backdrop-filter, no grid, no flex gap. The frosted glass is a tiny copy of the
+   current photo drawn into each card and scaled up (see paintGlass in main.js). */
+
+@font-face { font-family: 'Inter'; font-weight: 400; src: url('../fonts/inter-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 600; src: url('../fonts/inter-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Outfit'; font-weight: 400; src: url('../fonts/outfit-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Outfit'; font-weight: 500; src: url('../fonts/outfit-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Outfit'; font-weight: 600; src: url('../fonts/outfit-latin-600-normal.woff2') format('woff2'); }
+
+:root {
+  --ink: #f6f7f5;                       /* text */
+  --ink-2: rgba(246, 247, 245, 0.8);     /* secondary text */
+  --tint: rgba(12, 17, 22, 0.36);        /* darkening inside glass */
+  --rim: rgba(255, 255, 255, 0.16);      /* glass edge */
+  --accent: #a6d8cc;                     /* replaced by a colour taken from each photo */
+  --ok: #7fe3a5;
+  --alert: #ff9e86;
+  --night: #0b1015;
+  --fade: 2000ms;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 2px 18px rgba(0, 0, 0, 0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: var(--night);
+  color: var(--ink);
+  font-family: 'Inter', 'SamsungOne', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  cursor: none;
+}
+
+/* ---------- photo ---------- */
+.wp {
+  position: absolute;
+  top: 0; left: 0; width: 1920px; height: 1080px;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity var(--fade) ease-in-out;
+}
+.wp.on { opacity: 1; }
+.no-photos #wpA {
+  opacity: 1;
+  background-image: linear-gradient(180deg, #1f3a44 0%, #6b8f8a 58%, #d9c7a3 100%);
+}
+/* One even, full-width shade: a little at the top for the clock, more at the bottom for the shelf. */
+.scrim {
+  position: absolute;
+  top: 0; left: 0; width: 1920px; height: 1080px;
+  background: linear-gradient(180deg,
+    rgba(8, 12, 16, 0.5) 0%,
+    rgba(8, 12, 16, 0.22) 30%,
+    rgba(8, 12, 16, 0.1) 52%,
+    rgba(8, 12, 16, 0.5) 78%,
+    rgba(8, 12, 16, 0.72) 100%);
+}
+
+/* ---------- glass ---------- */
+.glass {
+  position: relative;
+  z-index: 0;                            /* keeps each card's layers inside it */
+  overflow: hidden;
+  border-radius: 30px;
+  background: rgba(40, 46, 52, 0.55);   /* until the photo has been sampled */
+}
+.glass > .glass-bg {                   /* the soft photo layer: exactly the box, same corners */
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 0;
+  display: block;
+  border-radius: inherit;
+  background-repeat: no-repeat;
+  background-size: 1920px 1080px;
+}
+.glass:before, .glass:after { box-sizing: border-box; }
+.glass:before {                          /* darkening, slightly lighter at the top */
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 1;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 40%), var(--tint);
+}
+.glass:after {                           /* the edge catching the light */
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 3;
+  border-radius: inherit;
+  border: 1.5px solid var(--rim);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.22);
+  transition: border-color 160ms ease;
+}
+.glass > * { position: relative; z-index: 2; }
+.glass > .glass-bg { position: absolute; z-index: 0; }
+
+/* ---------- hero clock, top left ---------- */
+.hero {
+  position: absolute;
+  top: 70px; left: 104px;
+  text-shadow: var(--shadow);
+  transition: opacity 600ms ease;
+}
+.time {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 216px;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  font-feature-settings: 'tnum' 1;
+}
+.date {
+  margin-top: 18px;
+  margin-left: 6px;
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+
+/* ---------- widgets, top right ---------- */
+.widgets {
+  position: absolute;
+  top: 80px; right: 104px;
+  width: 600px;
+}
+.widgets.off { display: none; }
+.card { padding: 26px 30px 24px; }
+.card + .card { margin-top: 22px; }
+
+/* Spotify and Wi-Fi share one slot below the weather card. Key 6 swaps them. */
+.widget-switch { margin-top: 22px; }
+.widget-switch.off { display: none; }
+.widget-switch .card { margin-top: 0; }
+
+.weather .wx-now {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+}
+.wx-icon svg, .wx-h-icon svg {
+  fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
+}
+.wx-icon svg { width: 76px; height: 76px; display: block; }
+.wx-temp {
+  margin-left: 16px;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 92px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.wx-desc { margin-left: 24px; min-width: 0; }
+.wx-text { font-size: 30px; font-weight: 600; }
+.wx-range { margin-top: 6px; font-size: 23px; color: var(--ink-2); }
+.wx-hours {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between;
+}
+.wx-hour { width: 110px; text-align: center; }
+.wx-h-time { font-size: 21px; color: var(--ink-2); }
+.wx-h-icon svg { width: 44px; height: 44px; margin: 8px auto 6px; display: block; stroke-width: 3; }
+.wx-h-temp { font-family: 'Outfit', 'Inter', sans-serif; font-weight: 500; font-size: 30px; }
+.wx-place { margin-top: 14px; font-size: 20px; color: var(--ink-2); }
+
+/* Spotify card: what is playing, on whichever device is active. */
+.spotify { padding: 26px 30px 24px; }
+.sp-row {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+}
+.sp-art {
+  width: 84px; height: 84px;
+  -webkit-flex-shrink: 0; flex-shrink: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #1ed760 0%, #0b6b34 100%);
+  background-position: center;
+  background-size: cover;
+  overflow: hidden;
+}
+.sp-art svg {
+  display: block;
+  width: 84px; height: 84px;
+  fill: none;
+  stroke: rgba(6, 20, 10, 0.5);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sp-art.has-art svg { display: none; }
+.sp-info {
+  -webkit-box-flex: 1; -webkit-flex: 1; flex: 1;
+  min-width: 0;
+  margin-left: 18px;
+}
+.sp-kicker {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #1ed760;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sp-title {
+  margin-top: 4px;
+  font-size: 28px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sp-artist {
+  margin-top: 2px;
+  font-size: 21px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sp-chip {
+  margin-left: 14px;
+  padding: 6px 14px;
+  border-radius: 18px;
+  background: rgba(30, 215, 96, 0.16);
+  color: #1ed760;
+  font-size: 19px;
+  font-weight: 600;
+  white-space: nowrap;
+  -webkit-flex-shrink: 0; flex-shrink: 0;
+}
+.sp-chip:empty { display: none; }
+.spotify.paused .sp-chip { background: rgba(255, 255, 255, 0.14); color: var(--ink-2); }
+.sp-progress {
+  height: 4px;
+  margin-top: 16px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.sp-bar {
+  width: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: #1ed760;
+  transition: width 1s linear;
+}
+.spotify.paused .sp-bar { transition: none; }
+.sp-hint {
+  margin-top: 10px;
+  font-size: 19px;
+  color: var(--accent);
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: opacity 160ms ease;
+}
+.spotify.focused .sp-hint { height: auto; opacity: 1; }
+.spotify.focused:after { border: 3px solid rgba(255, 255, 255, 0.92); }
+
+.net-row {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+}
+.net-icon { width: 46px; height: 46px; margin-right: 18px; overflow: visible; -webkit-flex-shrink: 0; flex-shrink: 0; }
+.net-icon .arc { fill: none; stroke: rgba(246, 247, 245, 0.3); stroke-width: 4.5; stroke-linecap: round; }
+.net-icon circle.arc { fill: rgba(246, 247, 245, 0.3); stroke: none; }
+.net-icon .arc.on { stroke: var(--ink); }
+.net-icon circle.arc.on { fill: var(--ink); }
+.net-icon .slash { stroke: var(--alert); stroke-width: 4.5; stroke-linecap: round; opacity: 0; }
+.net.down .net-icon .slash { opacity: 1; }
+.net-name {
+  -webkit-box-flex: 1; -webkit-flex: 1; flex: 1;
+  min-width: 0;
+  font-size: 30px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.chip {
+  margin-left: 16px;
+  padding: 7px 16px 7px 12px;
+  border-radius: 20px;
+  background: rgba(127, 227, 165, 0.16);
+  color: var(--ok);
+  font-size: 21px; font-weight: 600;
+  white-space: nowrap;
+  -webkit-flex-shrink: 0; flex-shrink: 0;
+}
+.chip .dot {
+  display: inline-block;
+  width: 10px; height: 10px; margin-right: 8px;
+  border-radius: 5px;
+  background: currentColor;
+  vertical-align: 1px;
+}
+.net.down .chip, .net.limited .chip { background: rgba(255, 158, 134, 0.18); color: var(--alert); }
+.net-log { margin-top: 14px; margin-left: 64px; font-size: 23px; color: var(--ink-2); }
+.net-log:empty { display: none; }
+.net-hint {
+  margin-left: 64px;
+  font-size: 20px;
+  color: var(--accent);
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: opacity 160ms ease;
+}
+.net.focused .net-hint { height: auto; margin-top: 10px; opacity: 1; }
+.net.focused:after { border: 3px solid rgba(255, 255, 255, 0.92); }
+
+/* ---------- shelf: apps, then inputs ---------- */
+.shelf-wrap {
+  position: absolute;
+  left: 0; right: 0;
+  top: 712px;
+  height: 330px;
+  overflow: hidden;
+  transition: opacity 600ms ease, -webkit-transform 600ms ease, transform 600ms ease;
+}
+.shelf {
+  position: absolute;
+  top: 34px; left: 104px;
+  white-space: nowrap;
+  transition: -webkit-transform 260ms ease-out, transform 260ms ease-out;
+}
+.tile {
+  display: inline-block;
+  vertical-align: top;
+  margin-right: 26px;
+  width: 352px;
+  height: 208px;
+  white-space: normal;
+  -webkit-transform: scale(1);
+  transform: scale(1);
+  transition: -webkit-transform 200ms ease-out, transform 200ms ease-out;
+}
+.tile.input { width: 196px; }
+.tile .wash {                           /* the app's own colour glowing through the glass */
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  border-radius: inherit;
+  opacity: 0.55;
+  transition: opacity 200ms ease;
+}
+.tile .name {
+  position: absolute;
+  left: 30px; bottom: 26px;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 46px;
+  letter-spacing: -0.015em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.tile img.app-icon {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+.tile.has-icon .name, .tile.has-icon .wash { display: none; }
+.tile .input-icon {
+  position: absolute;
+  top: 28px; left: 26px;
+  width: 56px; height: 56px;
+}
+.input-icon svg {
+  display: block;
+  width: 56px; height: 56px;
+  fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
+}
+.tile.input .name { left: 28px; bottom: 24px; font-size: 32px; font-weight: 500; }
+.tile .sheen {                          /* one sweep of light when a tile is selected */
+  position: absolute;                   /* stays inside the tile: the band moves, not the box */
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 3;
+  border-radius: inherit;
+  background-image: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0) 38%,
+    rgba(255, 255, 255, 0.22) 50%, rgba(255, 255, 255, 0) 62%, rgba(255, 255, 255, 0) 100%);
+  background-size: 300% 100%;
+  background-repeat: no-repeat;
+  background-position: 100% 0;
+  opacity: 0;
+}
+.tile.focused {
+  -webkit-transform: translateY(-14px) scale(1.07);
+  transform: translateY(-14px) scale(1.07);
+}
+.tile:before { background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 45%), rgba(12, 17, 22, 0.2); }
+.tile.focused:before { background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 60%), rgba(255, 255, 255, 0.04); }
+.tile.focused .wash { opacity: 0.9; }
+.tile.focused:after { border: 3px solid rgba(255, 255, 255, 0.95); }
+.tile.focused .sheen { -webkit-animation: sweep 900ms ease-out 1; animation: sweep 900ms ease-out 1; }
+@-webkit-keyframes sweep { 0% { background-position: 100% 0; opacity: 1; } 100% { background-position: 0% 0; opacity: 1; } }
+@keyframes sweep { 0% { background-position: 100% 0; opacity: 1; } 100% { background-position: 0% 0; opacity: 1; } }
+.tile.pressed { -webkit-transform: translateY(-8px) scale(1.03); transform: translateY(-8px) scale(1.03); }
+.tile.missing { opacity: 0.5; }
+
+.shelf .divider {
+  display: inline-block;
+  vertical-align: top;
+  width: 2px; height: 140px;
+  margin: 34px 30px 0 4px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* What the selected tile is, under the shelf. */
+.shelf-caption {
+  position: absolute;
+  left: 104px; top: 272px;
+  font-size: 24px;
+  color: var(--ink-2);
+  text-shadow: var(--shadow);
+}
+.shelf-caption b { color: var(--ink); font-weight: 600; }
+.shelf-caption .hint { margin-left: 18px; color: var(--accent); transition: color 1s ease; }
+.shelf-caption { transition: opacity 200ms ease; }
+.shelf-caption.hide { opacity: 0; }
+
+/* ---------- toast ---------- */
+.toast {
+  position: absolute;
+  z-index: 20;
+  left: 50%; top: 56px;
+  max-width: 1100px;
+  padding: 22px 36px;
+  border-radius: 40px;
+  font-size: 27px;
+  -webkit-transform: translate(-50%, -24px);
+  transform: translate(-50%, -24px);
+  opacity: 0;
+  transition: opacity 220ms ease, -webkit-transform 220ms ease, transform 220ms ease;
+}
+.toast.show { opacity: 1; -webkit-transform: translate(-50%, 0); transform: translate(-50%, 0); }
+
+/* ---------- connection history ---------- */
+.panel {
+  position: absolute;
+  z-index: 10;
+  top: 0; left: 0; width: 1920px; height: 1080px;
+  background: rgba(6, 10, 14, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 240ms ease, visibility 0s linear 240ms;
+}
+.panel-open .panel { opacity: 1; visibility: visible; transition: opacity 240ms ease; }
+.sheet {
+  position: absolute;
+  top: 130px; left: 240px;
+  width: 1440px; height: 820px;
+  padding: 60px 72px;
+  border-radius: 40px;
+}
+.sheet:before { background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 30%), rgba(10, 14, 18, 0.66); }
+.sheet h2 { font-family: 'Outfit', 'Inter', sans-serif; font-size: 56px; font-weight: 500; letter-spacing: -0.02em; }
+.p-watched { margin-top: 10px; font-size: 23px; color: var(--ink-2); }
+.panel-cols {
+  margin-top: 40px;
+  display: -webkit-box; display: -webkit-flex; display: flex;
+}
+.p-list-wrap { width: 800px; height: 500px; overflow: hidden; margin-right: 72px; }
+.p-day { margin: 24px 0 8px; font-size: 25px; font-weight: 600; }
+.p-day:first-child { margin-top: 0; }
+.p-row {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 25px;
+}
+.p-when { width: 240px; font-feature-settings: 'tnum' 1; }
+.p-kind { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; color: var(--ink-2); }
+.p-len { width: 140px; text-align: right; font-feature-settings: 'tnum' 1; }
+.p-empty { font-size: 27px; color: var(--ink-2); }
+.p-speed { width: 430px; }
+.p-speed h3 { font-family: 'Outfit', 'Inter', sans-serif; font-size: 34px; font-weight: 500; }
+.speed-btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 18px 34px;
+  border-radius: 36px;
+  background: var(--ink);
+  color: var(--night);
+  font-size: 25px;
+  font-weight: 600;
+}
+.speed-list { margin-top: 26px; font-size: 23px; color: var(--ink-2); }
+.s-row {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-align: baseline; -webkit-align-items: baseline; align-items: baseline;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.s-when { width: 120px; font-feature-settings: 'tnum' 1; }
+.s-what { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; text-align: right; }
+.s-what b { font-family: 'Outfit', 'Inter', sans-serif; font-size: 34px; font-weight: 500; color: var(--ink); }
+.s-what i { font-style: normal; margin-left: 18px; }
+.speed-btn.busy { background: rgba(255, 255, 255, 0.18); color: var(--ink); }
+.p-hint { position: absolute; left: 72px; bottom: 48px; font-size: 21px; color: var(--ink-2); }
+
+/* ---------- ambient: the shelf steps back; photo, clock and cards stay ---------- */
+.idle .shelf-wrap { opacity: 0; -webkit-transform: translateY(60px); transform: translateY(60px); }
+.idle .net.focused:after { border: 1.5px solid var(--rim); }
+.idle .net-hint { opacity: 0; }
+
+/* ---------- morning bus times, under the clock ---------- */
+.bus {
+  position: absolute;
+  top: 404px; left: 104px;
+  width: 560px;
+  padding: 24px 30px 20px;
+}
+.bus-head {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+}
+.bus-line {
+  display: inline-block;
+  min-width: 82px;
+  margin-right: 18px;
+  padding: 3px 14px 5px;
+  border-radius: 12px;
+  background: #dc241f;
+  color: #fff;
+  text-align: center;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 40px;
+  letter-spacing: -0.01em;
+}
+.bus-stop { font-size: 23px; line-height: 1.25; color: var(--ink-2); }
+.bus-row {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-align: baseline; -webkit-align-items: baseline; align-items: baseline;
+  -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.bus-dest { font-size: 28px; font-weight: 600; }
+.bus-eta { font-family: 'Outfit', 'Inter', sans-serif; font-weight: 500; font-size: 48px; font-feature-settings: 'tnum' 1; }
+.bus-eta b { font-weight: 500; }
+.bus-eta small { margin-left: 8px; font-size: 26px; font-weight: 400; color: var(--ink-2); }
+.bus-msg { margin-top: 16px; font-size: 26px; color: var(--ink-2); }
+.bus-note { margin-top: 10px; font-size: 20px; color: var(--ink-2); }
+
+/* ---------- night veil: dims everything (level set in dock-config.js) ---------- */
+.dim {
+  position: absolute;
+  top: 0; left: 0; width: 1920px; height: 1080px;
+  z-index: 50;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 3s ease;
+}
+
+/* ---------- prayer times: same spot as the bus card ---------- */
+.prayer {
+  position: absolute;
+  top: 404px; left: 104px;
+  width: 620px;
+  padding: 22px 26px 22px;
+}
+.pr-head {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-align: baseline; -webkit-align-items: baseline; align-items: baseline;
+  -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between;
+}
+.pr-count { font-size: 27px; color: var(--ink-2); }
+.pr-count b { font-family: 'Outfit', 'Inter', sans-serif; font-weight: 500; font-size: 50px; color: var(--ink); letter-spacing: -0.01em; }
+.pr-place { font-size: 21px; color: var(--ink-2); }
+.pr-row {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.pr-cell {
+  -webkit-box-flex: 1; -webkit-flex: 1; flex: 1;
+  padding: 10px 0 12px;
+  border-radius: 16px;
+  text-align: center;
+}
+.pr-name { font-size: 21px; font-weight: 600; letter-spacing: 0.06em; color: var(--ink-2); }
+.pr-time { margin-top: 4px; font-family: 'Outfit', 'Inter', sans-serif; font-weight: 500; font-size: 36px; font-feature-settings: 'tnum' 1; }
+.pr-cell.next { background: rgba(255, 255, 255, 0.16); }
+.pr-cell.next .pr-name, .pr-cell.next .pr-time { color: var(--accent); }
+
+/* ---------- ambient: the bus/prayer card drops to the bottom left ---------- */
+/* main.js sets translateY so its bottom edge sits at the bottom margin. */
+.bus, .prayer, .spotify, .net {
+  transition: -webkit-transform 600ms ease, transform 600ms ease;
+}
+
+/* ---------- Spotify Web Playback SDK iframe ----------
+   It stays loaded at 1x1 so Dock is always a Spotify Connect device; remote key 9
+   expands it to the full-screen diagnostics page. */
+.spotify-player {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0.01;
+  pointer-events: none;
+  z-index: 9000;
+  background: #000;
+}
+.spotify-player.on {
+  top: 0; right: 0; bottom: 0; left: 0;
+  width: auto;
+  height: auto;
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 9999;
+}
+.spotify-player iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+}
